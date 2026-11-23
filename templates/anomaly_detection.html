@@ -1,0 +1,248 @@
+{% extends 'base.html' %}
+{% block title %}Anomaly detection{% endblock %}
+{% block top_heading %}AI anomaly detection{% endblock %}
+{% block content %}
+<div class="page-heading anomaly-page-heading">
+  <div>
+    <span class="eyebrow">AI SECURITY MONITORING · ADMIN ONLY</span>
+    <h1><span class="anomaly-heading-icon">✺</span> Anomaly Detection <span class="ai-pill">AI Powered</span></h1>
+    <p>Identify unusual user activities using Isolation Forest, an unsupervised machine-learning algorithm.</p>
+  </div>
+  {% if latest %}<span class="module-pill">LAST RUN · {{ latest.created_at|datetime_display }}</span>{% endif %}
+</div>
+
+<section class="ai-tech-banner">
+  <div class="ai-tech-symbol">◉</div>
+  <div class="ai-tech-label"><strong> Selected AI Technique</strong><small>Unsupervised learning</small></div>
+  <div class="ai-tech-copy">
+    <h2>Isolation Forest <span>— Unsupervised Anomaly Detection</span></h2>
+    <p>Analyses user activity logs and flags unusual behaviour for administrator review.</p>
+  </div>
+  <div class="ai-tech-illustration" aria-hidden="true"><img src="{{ url_for('static', filename='anomaly_logo.png') }}"
+      alt="AI Anomaly Detection" class="ai-tech-logo"></div>
+</section>
+
+<div class="anomaly-stats-grid">
+  <div class="anomaly-stat blue">
+    <span class="anomaly-stat-icon">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path
+          d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"
+          fill="#3b82f6" />
+      </svg>
+    </span>
+    <div><strong>{{ totals.total or 0 }}</strong><small>Total Activities</small></div>
+  </div>
+  <div class="anomaly-stat red">
+    <span class="anomaly-stat-icon">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"
+          fill="#ef4444" />
+      </svg>
+    </span>
+    <div><strong>{{ flagged_count_current }}</strong><small>Suspicious Activities</small></div>
+  </div>
+  <div class="anomaly-stat amber">
+    <span class="anomaly-stat-icon">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path
+          d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"
+          fill="#f59e0b" />
+      </svg>
+    </span>
+    <div><strong>{{ totals.failed_auth_or_denied or 0 }}</strong><small>Repeated Failed Logins</small></div>
+  </div>
+  <div class="anomaly-stat purple">
+    <span class="anomaly-stat-icon">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" fill="#8b5cf6" />
+      </svg>
+    </span>
+    <div><strong>{{ totals.downloads or 0 }}</strong><small>Excessive Downloads</small></div>
+  </div>
+</div>
+
+<div class="anomaly-layout">
+  <aside class="anomaly-tools-column">
+    <section class="panel anomaly-run-card">
+      <div class="anomaly-card-title"><span>✺</span>
+        <h2>Run anomaly detection</h2>
+      </div>
+      <p>Analyse recent user activity logs with Isolation Forest.</p>
+      <form method="post" action="{{ url_for('run_anomaly_detection') }}" class="anomaly-run-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <label for="range_days">Activity period</label>
+        <select id="range_days" name="range_days"
+          onchange="window.location.href='{{ url_for('anomaly_detection') }}?range_days=' + this.value">
+          <option value="0" {% if range_days==0 %}selected{% endif %}>All activity logs</option>
+          <option value="1" {% if range_days==1 %}selected{% endif %}>Last 24 hours</option>
+          <option value="7" {% if range_days==7 %}selected{% endif %}>Last 7 days</option>
+          <option value="30" {% if range_days==30 %}selected{% endif %}>Last 30 days</option>
+        </select>
+        <button type="submit" class="btn btn-primary btn-full"><span>▶</span> Run analysis</button>
+      </form>
+      <a class="btn btn-outline btn-full anomaly-refresh"
+        href="{{ url_for('anomaly_detection', range_days=range_days, refresh=1) }}">↻ &nbsp; Refresh results</a>
+      {% if latest and latest.model_trained %}
+      <div class="model-state good"><span>✓</span>
+        <div><strong>Model trained</strong><small>{{ latest.window_count }} activity windows analysed</small></div>
+      </div>
+      {% else %}
+      <div class="model-state neutral"><span>i</span>
+        <div><strong>Ready to analyse</strong><small>Run an analysis after activity has been recorded.</small></div>
+      </div>
+      {% endif %}
+    </section>
+
+    <section class="panel model-details-card">
+      <div class="anomaly-card-title"><span>♧</span>
+        <h2>Model details</h2>
+      </div>
+      <dl class="model-detail-list">
+        <div>
+          <dt>Algorithm</dt>
+          <dd>Isolation Forest</dd>
+        </div>
+        <div>
+          <dt>Learning type</dt>
+          <dd>Unsupervised</dd>
+        </div>
+        <div>
+          <dt>Input data</dt>
+          <dd>User activity logs</dd>
+        </div>
+        <div>
+          <dt>Window size</dt>
+          <dd>15 minutes</dd>
+        </div>
+      </dl>
+    </section>
+  </aside>
+
+  <section class="panel detection-results-panel">
+    <div class="panel-heading detection-heading">
+      <div>
+        <h2><span class="results-chart-icon">▥</span> Detection results</h2>
+        <p>Suspicious activity patterns identified from the selected log period.</p>
+      </div>
+      {% if latest %}<span class="analysis-time">Last analysis: {{ latest.created_at|datetime_display }}</span>{% else
+      %}<span class="analysis-time">No analysis run yet</span>{% endif %}
+    </div>
+
+    {% if latest %}
+    <div class="analysis-summary {% if latest.model_trained %}summary-good{% else %}summary-info{% endif %}">
+      <span>{% if latest.model_trained %}✓{% else %}i{% endif %}</span>
+      <div><strong>{{ 'Isolation Forest analysis completed' if latest.model_trained else 'Initial activity analysis
+          completed' }}</strong><small>{{ latest.model_message }}</small></div>
+    </div>
+    {% endif %}
+
+    {% if detections %}
+    <div class="table-wrap anomaly-table-wrap">
+      <table class="anomaly-table">
+        <thead>
+          <tr>
+            <th>User / source</th>
+            <th>Activity pattern</th>
+            <th>Evidence</th>
+            <th>Time window</th>
+            <th>Score</th>
+            <th>Severity</th>
+            <th>Review</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in detections %}
+          <tr>
+            <td>
+              <div class="anomaly-user"><span class="user-mini">♙</span>
+                <div><strong>{{ item.user_name or item.actor_label }}</strong><small>{{ item.user_email or ('Visitor
+                    fingerprint · ' ~ item.actor_key[-8:]) }}</small></div>
+              </div>
+            </td>
+            <td><span class="activity-chip">{{ item.category }}</span><small class="table-subline">{{ item.event_count
+                }} events · {{ item.unique_files }} files</small></td>
+            <td><span class="evidence-text">{{ item.summary }}</span>
+              <details class="evidence-details">
+                <summary>View evidence</summary>
+                <ul>{% for line in item.evidence_json|from_json %}<li>{{ line }}</li>{% endfor %}<li>{{
+                    item.failed_logins }} failed logins · {{ item.downloads }} downloads · {{ item.denied_events }}
+                    denied events</li>
+                </ul><small>Detection source: {{ item.detection_source }}</small>
+              </details>
+            </td>
+            <td><span class="table-time">{{ item.window_start|datetime_display }}</span><small class="table-subline">to
+                {{ item.window_end|datetime_display }}</small></td>
+            <td><strong class="anomaly-score">{{ '%.2f'|format(item.anomaly_score) }}</strong></td>
+            <td><span class="severity-chip severity-{{ item.severity|lower }}">{{ item.severity }}</span></td>
+            <td><span class="review-chip review-{{ item.review_status|lower|replace(' ','-') }}">{{ item.review_status
+                }}</span></td>
+            <td>
+              <div class="anomaly-actions">
+                {% if item.review_status == 'Pending' %}
+                <form method="post" action="{{ url_for('review_anomaly_detection', detection_id=item.id) }}"><input
+                    type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="review_status"
+                    value="Reviewed"><button class="icon-btn" type="submit" title="Mark reviewed"
+                    aria-label="Mark reviewed">✓</button></form>
+                <form method="post" action="{{ url_for('review_anomaly_detection', detection_id=item.id) }}"><input
+                    type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="review_status"
+                    value="False Positive"><button class="icon-btn warning" type="submit" title="Mark false positive"
+                    aria-label="Mark false positive">!</button></form>
+                {% endif %}
+                <form method="post" action="{{ url_for('delete_anomaly_detection', detection_id=item.id) }}"
+                  data-confirm="Delete this suspicious activity finding? The original access logs will remain unchanged.">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="icon-btn danger"
+                    type="submit" title="Delete finding" aria-label="Delete finding"><svg viewBox="0 0 24 24"
+                      aria-hidden="true">
+                      <path d="M4 7h16M9 7V4h6v3m-9 0 1 13h10l1-13M10 11v5m4-5v5" />
+                    </svg></button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% elif latest and latest.activity_count == 0 %}
+    <div class="empty-state anomaly-empty"><span class="empty-icon">⌁</span>
+      <h3>No activity in this period</h3>
+      <p>No log events were found in the selected date range. Generate normal application activity and run the analysis
+        again.</p>
+    </div>
+    {% elif latest and latest.flagged_count > 0 %}
+    <div class="empty-state anomaly-empty"><span class="empty-icon">✓</span>
+      <h3>Saved findings were cleared</h3>
+      <p>This analysis originally identified {{ latest.flagged_count }} suspicious windows, but the saved finding
+        records have been removed. Run a new analysis to refresh the results.</p>
+    </div>
+    {% elif latest %}
+    <div class="empty-state anomaly-empty"><span class="empty-icon">✓</span>
+      <h3>No suspicious activity was flagged</h3>
+      <p>{{ latest.activity_count }} log events were analysed. This does not guarantee that all activity is safe;
+        continue monitoring new logs.</p>
+    </div>
+    {% else %}
+    <div class="empty-state anomaly-empty"><span class="empty-icon">✺</span>
+      <h3>No analysis results yet</h3>
+      <p>Choose a period and run Isolation Forest to inspect the activity recorded by File Vault.</p>
+    </div>
+    {% endif %}
+
+    {% if latest %}
+    <div class="detection-footer">
+      <span>Analysis #{{ latest.id }} · {{ latest.activity_count }} raw events · {{ latest.window_count }} activity
+        windows</span>
+      <form method="post" action="{{ url_for('clear_anomaly_history') }}"
+        data-confirm="Clear all saved anomaly analyses and findings? The original access logs will be preserved.">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn-danger-soft btn-small" type="submit">♲ &nbsp; Clear analysis history</button>
+      </form>
+    </div>
+    {% endif %}
+  </section>
+</div>
+
+
+{% endblock %}

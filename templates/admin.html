@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block title %}Admin monitoring{% endblock %}
+{% block top_heading %}Administrator monitoring{% endblock %}
+{% block content %}
+<div class="page-heading"><div><span class="eyebrow">SYSTEM OVERVIEW</span><h1>Admin monitoring</h1><p>High-level usage and security activity across File Vault.</p></div><a class="btn btn-primary" href="{{ url_for('anomaly_detection') }}">✺ &nbsp; AI anomaly detection</a></div>
+<div class="stats-grid admin-stats">
+  <div class="stat-card"><div class="stat-top"><span class="stat-icon blue-bg">♙</span></div><strong>{{ metrics.users }}</strong><small>Registered users</small></div>
+  <div class="stat-card"><div class="stat-top"><span class="stat-icon purple-bg">▤</span></div><strong>{{ metrics.files }}</strong><small>Encrypted files</small></div>
+  <div class="stat-card"><div class="stat-top"><span class="stat-icon green-bg">↗</span></div><strong>{{ metrics.active_links }}</strong><small>Active share links</small></div>
+  <div class="stat-card"><div class="stat-top"><span class="stat-icon amber-bg">!</span></div><strong>{{ metrics.denied }}</strong><small>Denied access events</small></div>
+</div>
+<section class="panel">
+  <div class="panel-heading"><div><h2>Latest security activity</h2><p>Recent events from all users. Delete individual entries or clear all audit history.</p></div>
+    {% if logs %}
+    <form method="post" action="{{ url_for('admin_clear_access_logs') }}" data-confirm="Clear ALL security activity history for every user? This cannot be undone.">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="btn btn-danger-soft btn-small" type="submit"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3m-9 0 1 13h10l1-13M10 11v5m4-5v5"/></svg>Clear history</button>
+    </form>
+    {% endif %}
+  </div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Date & time</th><th>File</th><th>Event</th><th>Result</th><th>Details</th><th class="actions-col">Clear</th></tr></thead>
+    <tbody>
+    {% for log in logs %}
+      <tr><td>{{ log.created_at|datetime_display }}</td><td>{{ log.original_filename or '—' }}</td><td>{{ log.event.replace('_',' ') }}</td>
+        <td><span class="status-chip {{ 'active' if log.result == 'SUCCESS' else 'expired' if log.result == 'DENIED' else 'muted-status' }}">{{ log.result|capitalize }}</span></td><td>{{ log.details }}</td>
+        <td class="actions-col"><form method="post" action="{{ url_for('admin_delete_access_log', log_id=log.id) }}" data-confirm="Delete this security activity entry?"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="icon-btn danger" type="submit" title="Delete activity entry" aria-label="Delete activity entry"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3m-9 0 1 13h10l1-13M10 11v5m4-5v5"/></svg></button></form></td>
+      </tr>
+    {% else %}<tr><td colspan="6" class="empty-cell">No activity recorded yet.</td></tr>{% endfor %}
+    </tbody>
+  </table></div>
+</section>
+{% endblock %}

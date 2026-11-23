@@ -1,0 +1,79 @@
+{% extends 'base.html' %}{% block title %}Dashboard{% endblock %}{% block top_heading %}Dashboard overview{% endblock
+%}{% block content %}
+<div class="page-heading">
+    <div><span class="eyebrow">YOUR WORKSPACE</span>
+        <h1>Welcome, {{ g.user.name.split(' ')[0] }} <span class="wave">✦</span></h1>
+        <p>Manage encrypted files and time-limited sharing links.</p>
+    </div><a class="btn btn-primary" href="{{ url_for('upload') }}">＋ Upload & encrypt</a>
+</div>
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-top"><span class="stat-icon blue-bg">▤</span><span class="stat-trend">YOUR VAULT</span></div>
+        <strong>{{ total_files }}</strong><small>Total encrypted files</small>
+    </div>
+    <div class="stat-card">
+        <div class="stat-top"><span class="stat-icon purple-bg">↗</span><span class="stat-trend">SHARING</span></div>
+        <strong>{{ shared_count }}</strong><small>Links created</small>
+    </div>
+    <div class="stat-card">
+        <div class="stat-top"><span class="stat-icon green-bg">◷</span><span class="stat-trend">LIVE NOW</span></div>
+        <strong>{{ active_links }}</strong><small>Active links</small>
+    </div>
+    <div class="stat-card">
+        <div class="stat-top"><span class="stat-icon amber-bg">⌛</span><span class="stat-trend">TIME-LOCKED</span></div>
+        <strong>{{ expired_files }}</strong><small>Expired files</small>
+    </div>
+</div>
+<div class="dashboard-grid">
+    <section class="panel main-panel">
+        <div class="panel-heading">
+            <div>
+                <h2>Recent encrypted files</h2>
+                <p>Your latest uploads and expiry times.</p>
+            </div><a class="text-link" href="{{ url_for('my_files') }}">View all files →</a>
+        </div>{% if recent_files %}<div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>File name</th>
+                        <th>Uploaded</th>
+                        <th>Expiry</th>
+                        <th>Status</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>{% for file in recent_files %}<tr>
+                        <td><span class="file-cell"><span class="file-icon">▧</span><strong>{{ file.original_filename
+                                    }}</strong></span></td>
+                        <td>{{ file.created_at|datetime_display }}</td>
+                        <td>{{ file.expires_at|datetime_display }}</td>
+                        <td>{% if file.expires_at|is_expired %}<span class="status-chip expired">Expired</span>{% else
+                            %}<span class="status-chip active">Active</span>{% endif %}</td>
+                        <td><a class="table-action" href="{{ url_for('file_detail', file_id=file.id) }}">Open</a></td>
+                    </tr>{% endfor %}</tbody>
+            </table>
+        </div>{% else %}<div class="empty-state"><span class="empty-icon">▤</span>
+            <h3>Your vault is ready</h3>
+            <p>Upload your first file to encrypt it and create an expiring share link.</p><a class="btn btn-primary"
+                href="{{ url_for('upload') }}">Upload your first file</a>
+        </div>{% endif %}
+    </section>
+    <section class="panel quick-panel">
+        <div class="panel-heading">
+            <div>
+                <h2>Quick actions</h2>
+                <p>Get things done quickly.</p>
+            </div>
+        </div><a class="quick-action" href="{{ url_for('upload') }}"><span
+                class="quick-icon blue-bg">⇧</span><span><strong>Upload & encrypt</strong><small>Protect a new
+                    file</small></span><b>→</b></a><a class="quick-action" href="{{ url_for('shared_links') }}"><span
+                class="quick-icon green-bg">↗</span><span><strong>My shared links</strong><small>Copy or revoke
+                    links</small></span><b>→</b></a><a class="quick-action" href="{{ url_for('access_logs') }}"><span
+                class="quick-icon purple-bg">▤</span><span><strong>Access logs</strong><small>Review file
+                    activity</small></span><b>→</b></a>
+        <div class="tip-card"><span>✦ SECURITY TIP</span>
+            <p>Use an additional link password when sharing sensitive files outside your trusted circle.</p>
+        </div>
+    </section>
+</div>
+{% endblock %}

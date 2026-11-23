@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block title %}Secure file sharing{% endblock %}
+{% block content %}
+<section class="hero-section">
+  <div class="hero-copy">
+    <span class="hero-kicker"><span class="kicker-dot"></span> PRIVATE. ENCRYPTED. TIME-LIMITED.</span>
+    <h1>Share files with<br><span>time on your side.</span></h1>
+    <p class="hero-lead">Encrypt your files, create secure sharing links, and decide exactly when access should expire.</p>
+    <div class="hero-actions"><a class="btn btn-primary btn-large" href="{{ url_for('register') }}">Get started <span>→</span></a><a class="btn btn-outline btn-large" href="{{ url_for('login') }}">Login to vault</a></div>
+    <div class="hero-trust"><span>✓ AES-256-GCM encryption</span><span>✓ Expiry-based access</span><span>✓ Access activity logs</span></div>
+  </div>
+  <div class="hero-visual">
+    <div class="visual-glow"></div>
+    <div class="vault-card"><div class="vault-top"><span class="mini-logo">⌑</span><span>SECURE VAULT</span><span class="live-dot"></span></div><div class="folder-illustration"><div class="folder-back"></div><div class="folder-front"><span class="file-line"></span><span class="file-line short"></span><span class="file-line"></span></div><div class="lock-orb">⌑</div><div class="clock-orb">◷</div></div><div class="vault-card-bottom"><div><strong>Project_Report.pdf</strong><small>Encrypted file · 2.4 MB</small></div><span class="status-chip active">Protected</span></div></div>
+    <div class="floating-note note-one"><span class="float-icon blue">⌑</span><div><strong>Encrypted</strong><small>AES-256-GCM</small></div></div>
+    <div class="floating-note note-two"><span class="float-icon green">◷</span><div><strong>Access expires</strong><small>25 Nov · 6:00 PM</small></div></div>
+  </div>
+</section>
+<section class="feature-strip" id="features"><div class="feature-item"><span class="feature-icon">⌑</span><div><strong>Strong encryption</strong><small>Files stay encrypted at rest.</small></div></div><div class="feature-item"><span class="feature-icon">↗</span><div><strong>Share by link</strong><small>Copy a private, random link.</small></div></div><div class="feature-item"><span class="feature-icon">◷</span><div><strong>Set an expiry</strong><small>Access closes automatically.</small></div></div><div class="feature-item"><span class="feature-icon">▤</span><div><strong>Track activity</strong><small>Review access attempts.</small></div></div></section>
+<section class="home-bottom"><div><span class="eyebrow">YOUR FILES. YOUR RULES.</span><h2>One simple place to<br>share more securely.</h2></div><a class="btn btn-primary" href="{{ url_for('register') }}">Create your vault <span>→</span></a></section>
+{% endblock %}

@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% block title %}Shared links{% endblock %}
+{% block top_heading %}Manage shared links{% endblock %}
+{% block content %}
+<div class="page-heading">
+  <div><span class="eyebrow">MODULE 2 · ACCESS CONTROL</span><h1>My shared links</h1><p>Review link status, copy active links, revoke access, or remove old link records.</p></div>
+  <a class="btn btn-primary" href="{{ url_for('upload') }}"><span class="btn-symbol">＋</span> Share a new file</a>
+</div>
+<section class="panel">
+  <div class="panel-heading">
+    <div><h2>Link management</h2><p>Deleting a link record immediately makes its URL unusable. Related activity logs are retained.</p></div>
+    <span class="module-pill">{{ links|length }} LINKS</span>
+  </div>
+  {% if links %}
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>File name</th><th>Created</th><th>Expiry</th><th>Status</th><th>Password</th><th>Actions</th></tr></thead>
+      <tbody>
+      {% for link in links %}
+        <tr>
+          <td><span class="file-cell"><span class="file-icon">▧</span><strong>{{ link.original_filename }}</strong></span></td>
+          <td>{{ link.created_at|datetime_display }}</td>
+          <td>{{ link.expires_at|datetime_display }}</td>
+          <td><span class="status-chip {{ link.state }}">{{ link.state|capitalize }}</span></td>
+          <td>{{ 'Protected' if link.password_hash else 'No' }}</td>
+          <td>
+            <div class="inline-actions">
+              {% if link.state == 'active' %}
+                <input class="copy-source" id="copy-link-{{ link.id }}" value="{{ link.share_url }}" readonly aria-label="Share link">
+                <button class="icon-btn" type="button" title="Copy link" aria-label="Copy link" data-copy="copy-link-{{ link.id }}">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/></svg>
+                </button>
+                <form method="post" action="{{ url_for('revoke_share', share_id=link.id) }}" data-confirm="Revoke this link now? Anyone using it will lose access immediately.">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button class="icon-btn warning" type="submit" title="Revoke link" aria-label="Revoke link">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 14 21 3M15 3h6v6M9 5H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/></svg>
+                  </button>
+                </form>
+              {% endif %}
+              <form method="post" action="{{ url_for('delete_share_record', share_id=link.id) }}" data-confirm="Delete this link record? The URL will stop working immediately. Existing access-log entries will be kept.">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="icon-btn danger" type="submit" title="Delete link history" aria-label="Delete link history">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3m-9 0 1 13h10l1-13M10 11v5m4-5v5"/></svg>
+                </button>
+              </form>
+            </div>
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state"><span class="empty-icon">↗</span><h3>No sharing links yet</h3><p>Upload and encrypt a file, then generate a secure link to share it.</p><a class="btn btn-primary" href="{{ url_for('upload') }}">Upload & encrypt</a></div>
+  {% endif %}
+</section>
+<div class="info-note page-note"><span>i</span><p>For security, link tokens are stored encrypted. Copy a link when it is generated or from this page. Revoking or deleting a link blocks future access.</p></div>
+{% endblock %}
